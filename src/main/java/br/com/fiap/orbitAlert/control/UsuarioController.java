@@ -17,7 +17,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,7 +33,6 @@ public class UsuarioController {
     @Autowired private IUsuarioMapper mapper;
     @Autowired private UsuarioCachingService cachingService;
     @Autowired private UsuarioPaginacaoService paginacaoService;
-    @Autowired private PasswordEncoder passwordEncoder;
 
     @Operation(description = "Retorna todos os usuários", summary = "Retorna UsuarioDTO", tags = "Retorno de Informações")
     @GetMapping("/todos")
@@ -82,7 +80,6 @@ public class UsuarioController {
     @PostMapping("/novo")
     public ResponseEntity<UsuarioDTO> inserir(@RequestBody @Valid UsuarioDTO dto) {
         Usuario entidade = mapper.toEntity(dto);
-        entidade.setDsSenhaHash(passwordEncoder.encode(dto.getDsSenhaHash()));
         Usuario salvo = repository.save(entidade);
         cachingService.removerCache();
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDTO(salvo));
@@ -105,7 +102,6 @@ public class UsuarioController {
         Usuario antigo = cachingService.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuario", id));
         Usuario novo = mapper.toEntity(dto);
-        novo.setDsSenhaHash(passwordEncoder.encode(dto.getDsSenhaHash()));
         antigo.atualizar(novo);
         repository.save(antigo);
         cachingService.removerCache();
